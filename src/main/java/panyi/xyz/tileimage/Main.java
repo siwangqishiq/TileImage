@@ -15,23 +15,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class Main {
 
 
     public static void main(String[] args){
-        // TileImage tileImage = new TileImage();
-
-//        PngReader reader = new PngReader(new File("D:\\testimg\\1.png"));
-//        ImageInfo info = reader.imgInfo;
-//        System.out.println(info);
         String workDir = "D:\\testimg";
-        TileImage.convertJpgDir("E:\\assets\\images" , workDir);
-        ArrayList<TileImage.PictureInfo> picInfoList = TileImage.genMainColorPictureDir(workDir);
-
-        String originImage = "D:\\gk.jpeg";
-
+        String originImage = "D:\\gakki.jpg";
         String pngDstImage = "D:\\result.png";
+
+        File workDirFile = new File(workDir);
+        if(workDirFile.exists()){
+            workDirFile.deleteOnExit();
+        }
+        workDirFile.mkdirs();
+
+        TileImage.convertJpgDir("E:\\assets\\img\\wang" , workDir);
+
+        ArrayList<TileImage.PictureInfo> picInfoList = TileImage.genMainColorPictureDir(workDir);
         try {
             BufferedImage bufferedImage = ImageIO.read(new File(originImage));
 
@@ -42,7 +44,7 @@ public class Main {
             float ratio = (float)tileImageWidth / width;
             int tileImageHeight =(int)(ratio * height);
             Image scaleImage = bufferedImage.getScaledInstance(tileImageWidth , tileImageHeight ,
-                    Image.SCALE_SMOOTH);
+                    Image.SCALE_AREA_AVERAGING);
 
             BufferedImage scaleImageBuffer = TileImage.toBufferedImage(scaleImage);
 
@@ -66,7 +68,20 @@ public class Main {
          // TileImage.convertPngToJpg(pngDstImage ,"D:");
     }
 
+    public static class CandidateItem{
+        TileImage.PictureInfo picInfo;
+        double distance = 0.0f;
+
+        public CandidateItem(TileImage.PictureInfo picInfo, double distance) {
+            this.picInfo = picInfo;
+            this.distance = distance;
+        }
+    }
+
     public static TileImage.PictureInfo findClosestImage(List<TileImage.PictureInfo> infoList , int color){
+        final int candidateSize = 1;
+
+        List<CandidateItem> candidateList = new ArrayList<CandidateItem>(candidateSize);
         TileImage.PictureInfo result = null;
 
         double cloestValue = Double.MAX_VALUE;
@@ -83,9 +98,28 @@ public class Main {
             if(distance < cloestValue){
                 cloestValue = distance;
                 result = info;
-            }
-        }
 
-        return result;
+                if(candidateList.size() > candidateSize){//remove farest item
+                    int delIndex = -1;
+                    double farestValue = 0.0f;
+                    for(int j = 0 ; j < candidateList.size();j++){
+                        if(farestValue < candidateList.get(j).distance){
+                            farestValue = candidateList.get(j).distance;
+                            delIndex = j;
+                        }
+                    }//end for j
+
+                    if(delIndex >= 0){
+                        candidateList.remove(delIndex);
+                    }
+                }
+
+                candidateList.add(new CandidateItem(info , cloestValue));
+            }
+        }//end for i
+
+        Random rnd = new Random();
+        int rndIndex = rnd.nextInt(candidateList.size());
+        return candidateList.get(rndIndex).picInfo;
     }
 }

@@ -76,7 +76,7 @@ public class TileImage {
         for(File f: jpgFiles){
             if(f.isFile()){
                 System.out.println("convert " + f.getAbsolutePath() +" to png!");
-                convertResizeJpgToPng(f.getAbsolutePath() , dstDir , 256,256);
+                convertResizeJpgToPng(f.getAbsolutePath() , dstDir , 126,126);
             }
         }//end for
     }
@@ -110,7 +110,7 @@ public class TileImage {
 
             try {
                 BufferedImage bufferedImage = ImageIO.read(originFile);
-                BufferedImage scaleImage = toBufferedImage(bufferedImage.getScaledInstance(width , height , Image.SCALE_DEFAULT));
+                BufferedImage scaleImage = toBufferedImage(bufferedImage.getScaledInstance(width , height , Image.SCALE_AREA_AVERAGING));
                 ImageIO.write(scaleImage, "png", pngFile);
             } catch (IOException e) {
                 e.printStackTrace();
